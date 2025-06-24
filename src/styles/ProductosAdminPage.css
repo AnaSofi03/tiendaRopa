@@ -1,0 +1,42 @@
+.titulo-productos {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.card-producto {
+  padding: 1.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  margin-bottom: 2rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  background-color: #fff;
+}
+
+.lista-productos {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  margin-bottom: 1rem;
+}
+
+.item-producto {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background-color: #fff;
+}
+
+.producto-descripcion {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.boton-navegacion {
+  margin-bottom: 1.5 rem;
+}
