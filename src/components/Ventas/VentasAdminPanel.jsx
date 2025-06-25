@@ -1,12 +1,13 @@
+// VentasAdminPanel.jsx
 import { useState, useEffect } from "react";
 import { useFetch, postData, fetchData } from "../../hooks/useApi";
 import { Link } from "react-router-dom";
 import "../../styles/VentasAdminPage.css";
 
-
-
 const VentasAdminPanel = () => {
   const [productos] = useFetch("productos");
+  const [categorias] = useFetch("categorias");
+  const [talles] = useFetch("talles");
   const [ventas, setVentas] = useState([]);
 
   const [venta, setVenta] = useState({
@@ -15,6 +16,8 @@ const VentasAdminPanel = () => {
     nombreCliente: "",
     contactoCliente: "",
     direccionCliente: "",
+    metodo_pago_id: 1,
+    usuario_Id: 1,
   });
 
   const [filtros, setFiltros] = useState({
@@ -25,68 +28,68 @@ const VentasAdminPanel = () => {
   });
 
   const [filtrosVentas, setFiltrosVentas] = useState({
-  nombre: "",
-  fecha: "",
-  producto: "",
-});
+    nombre: "",
+    fecha: "",
+    producto: "",
+  });
 
-const buscarVentas = async () => {
-  const query = new URLSearchParams(filtrosVentas).toString();
-  const datos = await fetchData(`ventas/filtrar?${query}`);
-  setVentas(datos);
-};
+  const buscarVentas = async () => {
+    const query = new URLSearchParams(filtrosVentas).toString();
+    const datos = await fetchData(`ventas/filtrar?${query}`);
+    setVentas(datos);
+  };
 
   const [productosFiltrados, setProductosFiltrados] = useState([]);
 
   useEffect(() => {
-  if (!productos.length) return; // evita correr sin productos
+    if (!productos.length) return;
 
-  let filtrados = [...productos];
+    let filtrados = [...productos];
 
-  if (filtros.texto) {
-    filtrados = filtrados.filter((p) =>
-      p.nombre.toLowerCase().includes(filtros.texto.toLowerCase())
-    );
-  }
+    if (filtros.texto) {
+      filtrados = filtrados.filter((p) =>
+        p.nombre.toLowerCase().includes(filtros.texto.toLowerCase())
+      );
+    }
 
-  if (filtros.talle) {
-    filtrados = filtrados.filter((p) => p.talle === filtros.talle);
-  }
+    if (filtros.talle) {
+      filtrados = filtrados.filter((p) => p.talle_id === parseInt(filtros.talle));
+    }
 
-  if (filtros.categoria) {
-    filtrados = filtrados.filter((p) => p.categoria === filtros.categoria);
-  }
+    if (filtros.categoria) {
+      filtrados = filtrados.filter((p) => p.categoria_id === parseInt(filtros.categoria));
+    }
 
-  if (filtros.ordenPrecio === "mayor") {
-    filtrados.sort((a, b) => b.precio - a.precio);
-  } else if (filtros.ordenPrecio === "menor") {
-    filtrados.sort((a, b) => a.precio - b.precio);
-  }
+    if (filtros.ordenPrecio === "mayor") {
+      filtrados.sort((a, b) => b.precio - a.precio);
+    } else if (filtros.ordenPrecio === "menor") {
+      filtrados.sort((a, b) => a.precio - b.precio);
+    }
 
-  setProductosFiltrados(filtrados);
-}, [filtros, productos.length]);  // Solo reacciona a cambios en longitud, no contenido entero
+    setProductosFiltrados(filtrados);
+  }, [filtros, productos]);
 
-    
-    const agregarProducto = (producto, cantidad) => {
+  const agregarProducto = (producto, cantidad) => {
     if (cantidad <= 0 || isNaN(cantidad)) return;
 
     const existe = venta.productosSeleccionados.find((p) => p.id === producto.id);
 
     if (existe) {
-        const actualizados = venta.productosSeleccionados.map((p) =>
+      const actualizados = venta.productosSeleccionados.map((p) =>
         p.id === producto.id ? { ...p, cantidad } : p
-        );
-        setVenta({ ...venta, productosSeleccionados: actualizados });
+      );
+      setVenta({ ...venta, productosSeleccionados: actualizados });
     } else {
-        setVenta({
+      setVenta({
         ...venta,
         productosSeleccionados: [
-            ...venta.productosSeleccionados,
-            { ...producto, cantidad },
+          ...venta.productosSeleccionados,
+          { ...producto, cantidad },
         ],
-        });
+      });
     }
-    };
+  };
+
   const eliminarProducto = (id) => {
     const filtrados = venta.productosSeleccionados.filter((p) => p.id !== id);
     setVenta({ ...venta, productosSeleccionados: filtrados });
@@ -113,42 +116,40 @@ const buscarVentas = async () => {
     );
     const nuevaVenta = {
       cliente_Id: venta.cliente_Id ? parseInt(venta.cliente_Id) : null,
-      productos: venta.productosSeleccionados,
+      usuario_Id: venta.usuario_Id,
+      metodo_pago_id: venta.metodo_pago_id,
       total,
-      fecha: new Date().toISOString().split("T")[0],
-      nombreCliente: venta.nombreCliente || "",
-      contactoCliente: venta.contactoCliente || "",
-      direccionCliente: venta.direccionCliente || "",
+      nombreCliente: venta.nombreCliente,
+      contactoCliente: venta.contactoCliente,
+      direccionCliente: venta.direccionCliente,
+      productos: venta.productosSeleccionados.map((p) => ({
+        producto_id: p.id,
+        cantidad: p.cantidad,
+        precio_unit: p.precio
+      }))
     };
 
     await postData("ventas", nuevaVenta);
     window.location.reload();
-    
   };
 
   const ventasAgrupadas = ventas.reduce((acc, venta) => {
-  const { ventaId } = venta;
-  if (!acc[ventaId]) {
-    acc[ventaId] = {
-      ventaId,
-      nombreCliente: venta.nombreCliente,
-      contactoCliente: venta.contactoCliente,
-      direccionCliente: venta.direccionCliente,
-      fecha: venta.fecha,
-      total: venta.total,
-      productos: [],
-    };
-  }
-
-  acc[ventaId].productos.push({
-    nombre: venta.nombreProducto,
-    cantidad: venta.cantidad,
-    precio_unit: venta.precio_unit,
-  });
-
-  return acc;
-}, {});
-  
+    const { venta_id } = venta;
+    if (!acc[venta_id]) {
+      acc[venta_id] = {
+        venta_id,
+        cliente: venta.cliente,
+        fecha: venta.fecha,
+        productos: [],
+      };
+    }
+    acc[venta_id].productos.push({
+      nombre: venta.producto,
+      cantidad: venta.cantidad,
+      precio_unit: venta.precio_unit,
+    });
+    return acc;
+  }, {});
 
   return (
     <div className="container">
@@ -162,216 +163,150 @@ const buscarVentas = async () => {
       </div>
       <br />
 
-      {/* Formulario del cliente y filtros */}
-      <div className="">
-        <h5 className="titulo-ventas">📦 Registrar nueva venta</h5>
+      <h5 className="titulo-ventas">📦 Registrar nueva venta</h5>
+      <input
+        type="text"
+        className="form-control mb-2"
+        placeholder="Nombre del cliente"
+        onChange={(e) => setVenta({ ...venta, nombreCliente: e.target.value })}
+      />
+      <input
+        type="text"
+        className="form-control mb-2"
+        placeholder="Contacto"
+        onChange={(e) => setVenta({ ...venta, contactoCliente: e.target.value })}
+      />
+      <input
+        type="text"
+        className="form-control mb-2"
+        placeholder="Dirección"
+        onChange={(e) => setVenta({ ...venta, direccionCliente: e.target.value })}
+      />
 
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Cliente</label>
-          <input
-            type="text"
-            className="form-control mb-2"
-            placeholder="Nombre del cliente (opcional)"
-            onChange={(e) => setVenta({ ...venta, nombreCliente: e.target.value })}
-          />
-          <input
-            type="text"
-            className="form-control mb-2"
-            placeholder="Email o contacto (opcional)"
-            onChange={(e) => setVenta({ ...venta, contactoCliente: e.target.value })}
-          />
-          <input
-            type="text"
-            className="form-control mb-2"
-            placeholder="Dirección (opcional)"
-            onChange={(e) => setVenta({ ...venta, direccionCliente: e.target.value })}
-          />
+      <h6>🔍 Buscar productos</h6>
+      <input
+        type="text"
+        className="form-control mb-2"
+        placeholder="Buscar por nombre"
+        onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
+      />
+
+      <div className="row">
+        <div className="col-md-4">
+          <select
+            className="form-select mb-2"
+            onChange={(e) => setFiltros({ ...filtros, ordenPrecio: e.target.value })}
+          >
+            <option value="">Ordenar por precio</option>
+            <option value="menor">Menor precio</option>
+            <option value="mayor">Mayor precio</option>
+          </select>
         </div>
-
-        {/* Filtros */}
-        <div className="mb-4">
-          <h6 className="fw-semibold">🔍 Buscar productos</h6>
-          <input
-            type="text"
-            className="form-control mb-2"
-            placeholder="Buscar por nombre"
-            onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
-          />
-          <div className="row">
-            <div className="col-md-4">
-              <select
-                className="form-select mb-2"
-                onChange={(e) => setFiltros({ ...filtros, ordenPrecio: e.target.value })}
-              >
-                <option value="">Ordenar por precio</option>
-                <option value="menor">Menor precio</option>
-                <option value="mayor">Mayor precio</option>
-              </select>
-            </div>
-            <div className="col-md-4">
-              <select
-                className="form-select mb-2"
-                onChange={(e) => setFiltros({ ...filtros, talle: e.target.value })}
-              >
-                <option value="">Filtrar por talle</option>
-                <option value="S">S</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-                <option value="único">Único</option>
-              </select>
-            </div>
-            <div className="col-md-4">
-              <select
-                className="form-select mb-2"
-                onChange={(e) => setFiltros({ ...filtros, categoria: e.target.value })}
-              >
-                <option value="">Filtrar por categoría</option>
-                <option value="Partes de Arriba">Partes de Arriba</option>
-                <option value="Partes de Abajo">Partes de Abajo</option>
-                <option value="Vestidos y Monos">Vestidos y monos</option>
-                <option value="Abrigos">Abrigos</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Productos filtrados */}
-        <div className="contenedor-productos">
-          <div className="row">
-            {productosFiltrados.map((p) => (
-              <div className="col-12 mb-2" key={p.id}>
-                <div className="d-flex align-items-center gap-2">
-                  <span className="flex-grow-1">
-                    {p.nombre} (${p.precio}) - {p.talle} / {p.categoria}
-                  </span>
-                  <input
-                    type="number"
-                    min="0"
-                    className="form-control"
-                    style={{ width: "80px" }}
-                    placeholder="0"
-                    onChange={(e) =>
-                      agregarProducto(p, parseInt(e.target.value))
-                    }
-                  />
-                </div>
-              </div>
+        <div className="col-md-4">
+          <select
+            className="form-select mb-2"
+            onChange={(e) => setFiltros({ ...filtros, talle: e.target.value })}
+          >
+            <option value="">Filtrar por talle</option>
+            {talles.map((t) => (
+              <option key={t.id} value={t.id}>{t.nombre}</option>
             ))}
-          </div>
+          </select>
         </div>
-
-        {/* Carrito */}
-        {venta.productosSeleccionados.length > 0 && (
-          <>
-            <div className="overflow-auto">
-              <h6>🛒 Productos seleccionados:</h6>
-              <div className="productos-seleccionados">
-                <ul className="list-group list-group-flush">
-                  {venta.productosSeleccionados.map((p) => (
-                    <li key={p.id} className="item-producto">
-                      <div>
-                        {p.nombre} x {p.cantidad} = ${" "}
-                        {(p.precio * p.cantidad).toFixed(2)}
-                      </div>
-                      <div className="btn-group">
-                        <button
-                          className="btn btn-sm btn-outline-secondary"
-                          onClick={() => reducirCantidad(p.id)}
-                        >
-                          ➖
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline-secondary"
-                          onClick={() => aumentarCantidad(p.id)}
-                        >
-                          ➕
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => eliminarProducto(p.id)}
-                        >
-                          ❌
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="total-contenedor">
-              <strong>Total:</strong>
-              <span className="total-badge">
-                $
-                {venta.productosSeleccionados
-                  .reduce((acc, p) => acc + p.precio * p.cantidad, 0)
-                  .toFixed(2)}
-              </span>
-            </div>
-          </>
-        )}
-
-        <button className="btn btn-primary w-100" onClick={registrarVenta}>
-          💾 Confirmar venta
-        </button>
+        <div className="col-md-4">
+          <select
+            className="form-select mb-2"
+            onChange={(e) => setFiltros({ ...filtros, categoria: e.target.value })}
+          >
+            <option value="">Filtrar por categoría</option>
+            {categorias.map((c) => (
+              <option key={c.id} value={c.id}>{c.nombre}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-            
+      <div className="contenedor-productos">
+        {productosFiltrados.map((p) => (
+          <div className="d-flex align-items-center gap-2 mb-2" key={p.id}>
+            <span className="flex-grow-1">
+              {p.nombre} (${p.precio}) - Talle: {p.talle} / Categoría: {p.categoria}
+            </span>
+            <input
+              type="number"
+              min="0"
+              className="form-control"
+              style={{ width: "80px" }}
+              placeholder="0"
+              onChange={(e) => agregarProducto(p, parseInt(e.target.value))}
+            />
+          </div>
+        ))}
+      </div>
 
-      {/* Lista de ventas */}
-      <br />
+      {venta.productosSeleccionados.length > 0 && (
+        <>
+          <h6>🛒 Productos seleccionados:</h6>
+          <ul className="list-group">
+            {venta.productosSeleccionados.map((p) => (
+              <li key={p.id} className="list-group-item d-flex justify-content-between align-items-center">
+                {p.nombre} x {p.cantidad} = ${p.precio * p.cantidad}
+                <div>
+                  <button className="btn btn-sm btn-secondary me-1" onClick={() => reducirCantidad(p.id)}>➖</button>
+                  <button className="btn btn-sm btn-secondary me-1" onClick={() => aumentarCantidad(p.id)}>➕</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => eliminarProducto(p.id)}>❌</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2">
+            <strong>Total: ${venta.productosSeleccionados.reduce((acc, p) => acc + p.precio * p.cantidad, 0).toFixed(2)}</strong>
+          </div>
+        </>
+      )}
 
-      <h6 className="fw-semibold">🔍 Buscar ventas</h6>
-                <input
-                type="text"
-                className="form-control mb-2"
-                placeholder="Buscar por cliente"
-                onChange={(e) => setFiltrosVentas({ ...filtrosVentas, nombre: e.target.value })}
-                />
-                <input
-                type="date"
-                className="form-control mb-2"
-                onChange={(e) => setFiltrosVentas({ ...filtrosVentas, fecha: e.target.value })}
-                />
-                <input
-                type="text"
-                className="form-control mb-2"
-                placeholder="Buscar por producto"
-                onChange={(e) => setFiltrosVentas({ ...filtrosVentas, producto: e.target.value })}
-                />
-                <button className="btn btn-secondary" onClick={buscarVentas}>
-                        🔍 Filtrar
-                </button>
-<br /><br />
+      <button className="btn btn-primary w-100 mt-3" onClick={registrarVenta}>💾 Confirmar venta</button>
+
+      <hr />
       <h5 className="titulo-ventas">📋 Ventas registradas</h5>
-      <div className="ventas-scroll">
-        <ul className="lista-ventas">
-  {Object.values(ventasAgrupadas).map((v) => (
-    <li key={v.ventaId} className="item-venta">
-      <div>
-        <strong>Cliente:</strong> {v.nombreCliente || "Anónimo"}
-        <p>Contacto: {v.contactoCliente}</p>
-        <p>Dirección: {v.direccionCliente}</p>
-        <p>Fecha: {new Date(v.fecha).toLocaleDateString("es-AR")}</p>
+      <input
+        type="text"
+        className="form-control mb-2"
+        placeholder="Buscar por cliente"
+        onChange={(e) => setFiltrosVentas({ ...filtrosVentas, nombre: e.target.value })}
+      />
+      <input
+        type="date"
+        className="form-control mb-2"
+        onChange={(e) => setFiltrosVentas({ ...filtrosVentas, fecha: e.target.value })}
+      />
+      <input
+        type="text"
+        className="form-control mb-2"
+        placeholder="Buscar por producto"
+        onChange={(e) => setFiltrosVentas({ ...filtrosVentas, producto: e.target.value })}
+      />
+      <button className="btn btn-secondary mb-3" onClick={buscarVentas}>🔍 Filtrar</button>
 
-        <strong>🛍 Productos:</strong>
-        <ul>
-          {v.productos.map((p, i) => (
-            <li key={i}>
-              {p.nombre} x {p.cantidad} — ${p.precio_unit}
-            </li>
-          ))}
-        </ul>
-      </div>
-      <span className="badge-total">Total: ${v.total}</span>
-    </li>
-  ))}
-</ul>
-      </div>
+      <ul className="list-group ventas-scroll">
+        {Object.values(ventasAgrupadas).map((v) => (
+          <li key={v.venta_id} className="list-group-item">
+            <strong>Cliente:</strong> {v.cliente}
+            <br />
+            <strong>Fecha:</strong> {new Date(v.fecha).toLocaleDateString("es-AR")}
+            <br />
+            <strong>Productos:</strong>
+            <ul>
+              {v.productos.map((p, i) => (
+                <li key={i}>{p.nombre} x {p.cantidad} — ${p.precio_unit}</li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
 
-      <div className="text-center">
-        <Link to="/login" className="btn btn-outline-secondary btn-volver">
+      <div className="text-center mt-3">
+        <Link to="/login" className="btn btn-outline-secondary">
           <i className="bi bi-box-arrow-in-left me-2"></i>Volver al login
         </Link>
       </div>

@@ -32,6 +32,13 @@ app.use("/productos", require("./routes/productos"));
 // Todas las rutas que empiecen con "/ventas" serán manejadas por el archivo './routes/ventas.js'
 app.use("/ventas", require("./routes/ventas"));
 
+
+app.use("/categorias", require("./routes/categorias"));
+app.use("/talles", require("./routes/talles"));
+app.use("/clientes", require("./routes/clientes"));
+app.use("/metodos_pago", require("./routes/metodos_pago"));
+
+
 // Inicia el servidor en el puerto especificado y muestra un mensaje en consola
 app.listen(PORT, () => {
   console.log(`Servidor backend corriendo en http://localhost:${PORT}`);

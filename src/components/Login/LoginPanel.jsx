@@ -46,22 +46,22 @@ export default function LoginPage() {
         <h2 className="mb-4">Iniciar sesión</h2>
 
         <form onSubmit={handleLogin}>
-        <input
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          placeholder="Usuario"
-          className="form-control mb-3"
-        />
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Contraseña"
-          type="password"
-          className="form-control mb-3"
-        />
-        <button type="submit" className="btn btn-primary w-100" onClick={handleLogin}>
-          Ingresar
-        </button>
+          <input
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            placeholder="Usuario"
+            className="form-control mb-3"
+          />
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Contraseña"
+            type="password"
+            className="form-control mb-3"
+          />
+          <button type="submit" className="btn btn-primary w-100">
+            Ingresar
+          </button>
         </form>
       </div>
     </div>

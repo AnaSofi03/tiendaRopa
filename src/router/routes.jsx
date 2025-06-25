@@ -9,6 +9,7 @@ import LandingPage from "../pages/LandingPage";
 import useStore from "../store/useStore";
 
 
+
 export default function AppRoutes() {
   const user = useStore((state) => state.user);
   return (
@@ -52,6 +53,8 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+ 
       </Routes>
     </BrowserRouter>
   );
